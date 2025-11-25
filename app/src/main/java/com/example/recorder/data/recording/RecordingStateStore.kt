@@ -1,5 +1,8 @@
 package com.example.recorder.data.recording
 
+import com.example.recorder.di.RecordingStateDispatcher
+import com.example.recorder.di.RecordingStateNowProvider
+import com.example.recorder.di.RecordingStateScope
 import com.example.recorder.domain.model.RecordingSessionState
 import java.time.Instant
 import javax.inject.Inject
@@ -7,7 +10,6 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,9 +20,9 @@ import kotlinx.coroutines.withContext
 
 @Singleton
 class RecordingStateStore @Inject constructor(
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob()),
-    private val dispatcher: CoroutineDispatcher = kotlinx.coroutines.Dispatchers.Default,
-    private val nowProvider: () -> Long = { System.currentTimeMillis() }
+    @RecordingStateScope private val scope: CoroutineScope,
+    @RecordingStateDispatcher private val dispatcher: CoroutineDispatcher,
+    @RecordingStateNowProvider private val nowProvider: () -> Long
 ) {
     private val _state = MutableStateFlow<RecordingSessionState>(RecordingSessionState.Idle)
     val state: StateFlow<RecordingSessionState> = _state.asStateFlow()
