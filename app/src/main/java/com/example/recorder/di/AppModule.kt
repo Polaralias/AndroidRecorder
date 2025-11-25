@@ -12,9 +12,14 @@ import com.example.recorder.data.local.MIGRATION_1_2
 import com.example.recorder.data.local.MIGRATION_2_3
 import com.example.recorder.data.local.RecorderDatabase
 import com.example.recorder.data.repository.RecordingRepositoryImpl
+import com.example.recorder.data.repository.TranscriptionPreferencesRepositoryImpl
+import com.example.recorder.data.transcription.GoogleCloudTranscriptionEngine
+import com.example.recorder.data.transcription.TranscriptionPreferencesDataSource
 import com.example.recorder.data.transcription.WhisperTranscriptionEngine
 import com.example.recorder.domain.repository.DriveBackupRepository
 import com.example.recorder.domain.repository.RecordingRepository
+import com.example.recorder.domain.repository.TranscriptionPreferencesRepository
+import com.example.recorder.domain.transcription.CloudTranscriptionEngine
 import com.example.recorder.domain.transcription.LocalTranscriptionEngine
 import dagger.Binds
 import dagger.Module
@@ -23,6 +28,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import javax.inject.Named
 import androidx.work.WorkManager
 
 @Module
@@ -38,9 +44,21 @@ abstract class AppBindingsModule {
 
     @Binds
     @Singleton
+    abstract fun bindTranscriptionPreferencesRepository(
+        impl: TranscriptionPreferencesRepositoryImpl
+    ): TranscriptionPreferencesRepository
+
+    @Binds
+    @Singleton
     abstract fun bindLocalTranscriptionEngine(
         impl: WhisperTranscriptionEngine
     ): LocalTranscriptionEngine
+
+    @Binds
+    @Singleton
+    abstract fun bindCloudTranscriptionEngine(
+        impl: GoogleCloudTranscriptionEngine
+    ): CloudTranscriptionEngine
 }
 
 @Module
@@ -58,6 +76,7 @@ object AppModule {
 
     @Provides
     @Singleton
+    @Named("backupPrefs")
     fun provideBackupPreferencesStore(
         @ApplicationContext context: Context
     ): DataStore<Preferences> =
@@ -67,8 +86,25 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideBackupPreferences(dataStore: DataStore<Preferences>): BackupPreferencesDataSource =
-        BackupPreferencesDataSource(dataStore)
+    fun provideBackupPreferences(
+        @Named("backupPrefs") dataStore: DataStore<Preferences>
+    ): BackupPreferencesDataSource = BackupPreferencesDataSource(dataStore)
+
+    @Provides
+    @Singleton
+    @Named("transcriptionPrefs")
+    fun provideTranscriptionPreferencesStore(
+        @ApplicationContext context: Context
+    ): DataStore<Preferences> =
+        PreferenceDataStoreFactory.create(
+            produceFile = { context.preferencesDataStoreFile("transcription_prefs") }
+        )
+
+    @Provides
+    @Singleton
+    fun provideTranscriptionPreferences(
+        @Named("transcriptionPrefs") dataStore: DataStore<Preferences>
+    ): TranscriptionPreferencesDataSource = TranscriptionPreferencesDataSource(dataStore)
 
     @Provides
     @Singleton
