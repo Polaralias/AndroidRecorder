@@ -11,6 +11,7 @@ import com.example.recorder.domain.repository.ApiKeyTestResult
 import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -81,19 +82,30 @@ class GoogleSpeechClient @Inject constructor(
             audio = GoogleRecognitionAudio(content = base64)
         )
 
-        val operation = speechApi.longRunningRecognize(apiKey, request)
-        val response = operation.response
-        if (operation.error != null) {
-            throw IllegalStateException(operation.error.message ?: "Cloud transcription failed")
+        var operation = speechApi.longRunningRecognize(apiKey, request)
+        val operationName = operation.name
+            ?: throw IllegalStateException("Cloud transcription operation did not start")
+
+        repeat(OPERATION_MAX_ATTEMPTS) {
+            operation.error?.let { status ->
+                throw IllegalStateException(status.message ?: "Cloud transcription failed")
+            }
+
+            val transcript = operation.response
+                ?.results
+                ?.flatMap { it.alternatives }
+                ?.mapNotNull { it.transcript }
+                ?.joinToString(separator = " ")
+
+            if (operation.done == true && !transcript.isNullOrBlank()) {
+                return transcript
+            }
+
+            delay(OPERATION_POLL_INTERVAL_MS)
+            operation = speechApi.getOperation(operationName, apiKey)
         }
 
-        val transcript = response?.results
-            ?.flatMap { it.alternatives }
-            ?.mapNotNull { it.transcript }
-            ?.joinToString(separator = " ")
-
-        return transcript?.takeIf { it.isNotBlank() }
-            ?: throw IllegalStateException("Transcription started. Check backend proxy for completion of operation ${operation.name}")
+        throw IllegalStateException("Transcription did not complete for operation $operationName")
     }
 
     private suspend fun transcribeViaProxy(apiKey: String, audioFile: File): ProxyTranscriptionResponse {
@@ -107,4 +119,9 @@ class GoogleSpeechClient @Inject constructor(
     private suspend fun testKeyThroughProxy(apiKey: String) = proxyApi!!.testKey(
         ProxyValidateKeyRequest(apiKey)
     )
+
+    private companion object {
+        const val OPERATION_POLL_INTERVAL_MS = 1_000L
+        const val OPERATION_MAX_ATTEMPTS = 30
+    }
 }
