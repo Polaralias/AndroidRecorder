@@ -17,6 +17,7 @@ import com.example.recorder.domain.model.RecordingSessionState
 import com.example.recorder.domain.model.TranscriptionStatus
 import com.example.recorder.domain.repository.DriveBackupRepository
 import com.example.recorder.domain.repository.RecordingRepository
+import com.example.recorder.domain.repository.TranscriptionPreferencesRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.IOException
 import java.time.Instant
@@ -36,6 +37,7 @@ class RecordingRepositoryImpl @Inject constructor(
     private val stateStore: RecordingStateStore,
     private val driveBackupRepository: DriveBackupRepository,
     private val transcriptionScheduler: TranscriptionScheduler,
+    private val transcriptionPreferencesRepository: TranscriptionPreferencesRepository,
     @ApplicationContext private val context: Context,
 ) : RecordingRepository {
 
@@ -111,7 +113,8 @@ class RecordingRepositoryImpl @Inject constructor(
             val stored = recording.copy(id = id)
             stateStore.stopSession()
             triggerAutoBackupIfEnabled(stored)
-            transcriptionScheduler.enqueue(stored.id)
+            val mode = transcriptionPreferencesRepository.transcriptionMode.first()
+            transcriptionScheduler.enqueue(stored.id, mode)
             stored
         } else {
             stateStore.stopSession()

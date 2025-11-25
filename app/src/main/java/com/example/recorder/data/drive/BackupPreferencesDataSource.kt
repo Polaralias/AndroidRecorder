@@ -10,12 +10,13 @@ import com.example.recorder.domain.model.BackupSettings
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
+import javax.inject.Named
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 @Singleton
 class BackupPreferencesDataSource @Inject constructor(
-    private val dataStore: DataStore<Preferences>
+    @Named("backupPrefs") private val dataStore: DataStore<Preferences>
 ) {
     private val autoBackupKey = booleanPreferencesKey("auto_backup_enabled")
     private val lastBackupEpochKey = longPreferencesKey("last_backup_epoch")

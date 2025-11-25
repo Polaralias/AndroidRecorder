@@ -7,6 +7,7 @@ import com.example.recorder.data.drive.DriveAuthManager
 import com.example.recorder.domain.model.BackupSettings
 import com.example.recorder.domain.model.BackupStatus
 import com.example.recorder.domain.repository.DriveBackupRepository
+import com.example.recorder.domain.repository.TranscriptionPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,16 +24,25 @@ import java.time.format.DateTimeFormatter
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val driveBackupRepository: DriveBackupRepository,
-    private val authManager: DriveAuthManager
+    private val authManager: DriveAuthManager,
+    private val transcriptionPreferencesRepository: TranscriptionPreferencesRepository
 ) : ViewModel() {
 
     private val _accountEmail = MutableStateFlow(authManager.lastSignedInAccount()?.email)
+    private val _apiKeyInput = MutableStateFlow("")
+    private val _keyTestMessage = MutableStateFlow("")
+    private val _isTestingKey = MutableStateFlow(false)
 
     val uiState: StateFlow<SettingsUiState> = combine(
         driveBackupRepository.backupSettings,
         driveBackupRepository.backupStatus,
-        _accountEmail
-    ) { settings, status, accountEmail ->
+        _accountEmail,
+        transcriptionPreferencesRepository.apiKey,
+        _apiKeyInput,
+        _keyTestMessage,
+        _isTestingKey
+    ) { settings, status, accountEmail, storedApiKey, apiKeyInput, keyTestMessage, isTestingKey ->
+        val resolvedInput = apiKeyInput.ifBlank { storedApiKey.orEmpty() }
         SettingsUiState(
             autoBackupEnabled = settings.autoBackupEnabled,
             accountEmail = accountEmail,
@@ -40,7 +50,11 @@ class SettingsViewModel @Inject constructor(
                 "Last backup: ${formatRelativeTime(lastAttempt)}"
             } ?: "Backup has not run yet",
             statusMessage = status.toMessage(settings),
-            isBackingUp = status is BackupStatus.InProgress
+            isBackingUp = status is BackupStatus.InProgress,
+            apiKeyInput = resolvedInput,
+            hasStoredApiKey = !storedApiKey.isNullOrBlank(),
+            keyTestMessage = keyTestMessage,
+            isTestingKey = isTestingKey
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, SettingsUiState())
 
@@ -58,6 +72,45 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val account = runCatching { authManager.getAccountFromIntent(intent) }.getOrNull()
             _accountEmail.value = account?.email
+        }
+    }
+
+    fun onApiKeyChanged(value: String) {
+        _apiKeyInput.value = value
+    }
+
+    fun onSaveApiKey() {
+        viewModelScope.launch {
+            if (_apiKeyInput.value.isBlank()) {
+                _keyTestMessage.value = "Enter an API key first"
+                return@launch
+            }
+            transcriptionPreferencesRepository.updateApiKey(_apiKeyInput.value)
+            _keyTestMessage.value = "API key saved securely"
+        }
+    }
+
+    fun onClearApiKey() {
+        viewModelScope.launch {
+            transcriptionPreferencesRepository.clearApiKey()
+            _apiKeyInput.value = ""
+            _keyTestMessage.value = "API key removed"
+        }
+    }
+
+    fun onTestApiKey() {
+        viewModelScope.launch {
+            if (_apiKeyInput.value.isBlank()) {
+                _keyTestMessage.value = "Enter an API key to test"
+                return@launch
+            }
+            _isTestingKey.value = true
+            val result = transcriptionPreferencesRepository.testApiKey(_apiKeyInput.value)
+            _keyTestMessage.value = result.message
+            if (result.success) {
+                transcriptionPreferencesRepository.updateApiKey(_apiKeyInput.value)
+            }
+            _isTestingKey.value = false
         }
     }
 
@@ -92,5 +145,9 @@ data class SettingsUiState(
     val accountEmail: String? = null,
     val lastBackupLabel: String = "Backup has not run yet",
     val statusMessage: String = "",
-    val isBackingUp: Boolean = false
+    val isBackingUp: Boolean = false,
+    val apiKeyInput: String = "",
+    val hasStoredApiKey: Boolean = false,
+    val keyTestMessage: String = "",
+    val isTestingKey: Boolean = false
 )
