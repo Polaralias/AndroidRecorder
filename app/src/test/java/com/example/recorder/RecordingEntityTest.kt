@@ -19,7 +19,9 @@ class RecordingEntityTest {
             createdAt = Instant.ofEpochMilli(1_000L),
             durationMillis = 5000L,
             transcriptionStatus = TranscriptionStatus.IN_PROGRESS,
-            isBackedUp = true
+            isBackedUp = true,
+            driveFileId = "drive123",
+            lastBackupAttempt = Instant.ofEpochMilli(2_000L)
         )
 
         val entity = domain.toEntity()
@@ -30,5 +32,7 @@ class RecordingEntityTest {
         assertEquals(domain.title, entity.title)
         assertEquals(domain.filePath, entity.filePath)
         assertEquals(domain.createdAt.toEpochMilli(), entity.createdAt)
+        assertEquals(domain.driveFileId, entity.driveFileId)
+        assertEquals(domain.lastBackupAttempt?.toEpochMilli(), entity.lastBackupAttempt)
     }
 }

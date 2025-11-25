@@ -15,7 +15,9 @@ data class RecordingEntity(
     @ColumnInfo(name = "created_at") val createdAt: Long,
     @ColumnInfo(name = "duration_millis") val durationMillis: Long,
     @ColumnInfo(name = "transcription_status") val transcriptionStatus: TranscriptionStatus,
-    @ColumnInfo(name = "is_backed_up") val isBackedUp: Boolean
+    @ColumnInfo(name = "is_backed_up") val isBackedUp: Boolean,
+    @ColumnInfo(name = "drive_file_id") val driveFileId: String?,
+    @ColumnInfo(name = "last_backup_attempt") val lastBackupAttempt: Long?
 )
 
 fun RecordingEntity.toDomain(): Recording = Recording(
@@ -25,7 +27,9 @@ fun RecordingEntity.toDomain(): Recording = Recording(
     createdAt = Instant.ofEpochMilli(createdAt),
     durationMillis = durationMillis,
     transcriptionStatus = transcriptionStatus,
-    isBackedUp = isBackedUp
+    isBackedUp = isBackedUp,
+    driveFileId = driveFileId,
+    lastBackupAttempt = lastBackupAttempt?.let { Instant.ofEpochMilli(it) }
 )
 
 fun Recording.toEntity(): RecordingEntity = RecordingEntity(
@@ -35,5 +39,7 @@ fun Recording.toEntity(): RecordingEntity = RecordingEntity(
     createdAt = createdAt.toEpochMilli(),
     durationMillis = durationMillis,
     transcriptionStatus = transcriptionStatus,
-    isBackedUp = isBackedUp
+    isBackedUp = isBackedUp,
+    driveFileId = driveFileId,
+    lastBackupAttempt = lastBackupAttempt?.toEpochMilli()
 )

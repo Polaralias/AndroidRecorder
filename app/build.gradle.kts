@@ -78,6 +78,11 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
+    implementation("com.google.android.gms:play-services-auth:21.1.1")
+    implementation("com.google.api-client:google-api-client-android:2.6.0")
+    implementation("com.google.apis:google-api-services-drive:v3-rev20240508-2.0.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
+
     implementation("androidx.media3:media3-common:1.3.1")
 
     testImplementation("junit:junit:4.13.2")
