@@ -1,5 +1,10 @@
 package com.example.recorder.presentation.recording
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -26,18 +31,46 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.example.recorder.domain.model.RecordingSessionState
 import kotlin.math.roundToInt
 
 @Composable
 fun RecordingRoute(viewModel: RecordingViewModel) {
     val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            viewModel.onStart()
+        } else {
+            Toast.makeText(
+                context,
+                "Microphone permission is required to start recording.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    val onStart = {
+        val hasPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+        if (hasPermission) {
+            viewModel.onStart()
+        } else {
+            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
     RecordingScreen(
         state = state,
-        onStart = viewModel::onStart,
+        onStart = onStart,
         onPause = viewModel::onPause,
         onResume = viewModel::onResume,
         onStop = viewModel::onStop
