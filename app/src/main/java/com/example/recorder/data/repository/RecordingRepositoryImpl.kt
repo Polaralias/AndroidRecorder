@@ -11,6 +11,7 @@ import com.example.recorder.data.local.toDomain
 import com.example.recorder.data.local.toEntity
 import com.example.recorder.data.recording.RecorderController
 import com.example.recorder.data.recording.RecordingStateStore
+import com.example.recorder.data.transcription.TranscriptionScheduler
 import com.example.recorder.domain.model.Recording
 import com.example.recorder.domain.model.RecordingSessionState
 import com.example.recorder.domain.model.TranscriptionStatus
@@ -34,6 +35,7 @@ class RecordingRepositoryImpl @Inject constructor(
     private val controller: RecorderController,
     private val stateStore: RecordingStateStore,
     private val driveBackupRepository: DriveBackupRepository,
+    private val transcriptionScheduler: TranscriptionScheduler,
     @ApplicationContext private val context: Context,
 ) : RecordingRepository {
 
@@ -45,6 +47,12 @@ class RecordingRepositoryImpl @Inject constructor(
 
     override fun observeRecordings(): Flow<List<Recording>> =
         recordingDao.observeRecordings().map { list -> list.map { it.toDomain() } }
+
+    override fun observeRecording(id: Long): Flow<Recording?> =
+        recordingDao.observeRecording(id).map { it?.toDomain() }
+
+    override suspend fun getRecording(id: Long): Recording? =
+        recordingDao.getRecording(id)?.toDomain()
 
     override suspend fun startRecording(): RecordingSessionState = withContext(Dispatchers.IO) {
         if (!hasMicrophonePermission()) {
@@ -93,6 +101,8 @@ class RecordingRepositoryImpl @Inject constructor(
                 createdAt = current.startTime,
                 durationMillis = duration,
                 transcriptionStatus = TranscriptionStatus.NOT_STARTED,
+                transcriptionText = null,
+                transcriptionUpdatedAt = null,
                 isBackedUp = false,
                 driveFileId = null,
                 lastBackupAttempt = null
@@ -101,6 +111,7 @@ class RecordingRepositoryImpl @Inject constructor(
             val stored = recording.copy(id = id)
             stateStore.stopSession()
             triggerAutoBackupIfEnabled(stored)
+            transcriptionScheduler.enqueue(stored.id)
             stored
         } else {
             stateStore.stopSession()
@@ -114,6 +125,22 @@ class RecordingRepositoryImpl @Inject constructor(
             driveBackupRepository.backupRecording(recording)
         }
     }
+
+    override suspend fun updateTranscriptionStatus(
+        id: Long,
+        status: TranscriptionStatus,
+        text: String?
+    ) {
+        recordingDao.updateTranscription(
+            id = id,
+            status = status,
+            text = text,
+            updatedAt = Instant.now().toEpochMilli()
+        )
+    }
+
+    override suspend fun getPendingTranscriptions(): List<Recording> =
+        recordingDao.getPendingTranscriptions().map { it.toDomain() }
 
     private fun hasMicrophonePermission(): Boolean =
         ContextCompat.checkSelfPermission(
