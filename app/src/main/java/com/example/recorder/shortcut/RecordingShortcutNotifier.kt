@@ -1,5 +1,6 @@
 package com.example.recorder.shortcut
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -7,6 +8,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.example.recorder.R
 import com.example.recorder.MainActivity
 
@@ -16,6 +18,8 @@ object RecordingShortcutNotifier {
     private const val NOTIFICATION_ID = 2002
 
     fun showQuickActionNotification(context: Context) {
+        if (!hasNotificationPermission(context)) return
+
         createChannel(context)
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle(context.getString(R.string.notification_quick_action_title))
@@ -56,6 +60,15 @@ object RecordingShortcutNotifier {
             )
             val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             manager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun hasNotificationPermission(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
+                android.content.pm.PackageManager.PERMISSION_GRANTED
+        } else {
+            NotificationManagerCompat.from(context).areNotificationsEnabled()
         }
     }
 

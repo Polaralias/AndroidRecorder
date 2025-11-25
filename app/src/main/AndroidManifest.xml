@@ -62,7 +62,7 @@
         <receiver
             android:name=".shortcut.RecordingShortcutReceiver"
             android:enabled="true"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.example.recorder.action.TOGGLE_RECORDING" />
                 <action android:name="com.example.recorder.action.START_SHORTCUT_RECORDING" />
