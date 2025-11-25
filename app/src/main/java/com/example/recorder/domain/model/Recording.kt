@@ -25,7 +25,8 @@ sealed interface RecordingSessionState {
         val startTime: Instant,
         val filePath: String,
         val isPaused: Boolean,
-        val amplitude: Int
+        val amplitude: Int,
+        val elapsedMillis: Long
     ) : RecordingSessionState
     data class Error(val message: String) : RecordingSessionState
 }

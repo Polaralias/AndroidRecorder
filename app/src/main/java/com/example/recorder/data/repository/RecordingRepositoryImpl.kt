@@ -1,15 +1,22 @@
 package com.example.recorder.data.repository
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import com.example.recorder.R
 import com.example.recorder.data.file.RecordingFileManager
 import com.example.recorder.data.local.RecordingDao
 import com.example.recorder.data.local.toDomain
 import com.example.recorder.data.local.toEntity
-import com.example.recorder.data.recording.RecordingController
+import com.example.recorder.data.recording.RecorderController
 import com.example.recorder.data.recording.RecordingStateStore
 import com.example.recorder.domain.model.Recording
 import com.example.recorder.domain.model.RecordingSessionState
 import com.example.recorder.domain.model.TranscriptionStatus
 import com.example.recorder.domain.repository.RecordingRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.IOException
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -22,9 +29,14 @@ import javax.inject.Singleton
 class RecordingRepositoryImpl @Inject constructor(
     private val recordingDao: RecordingDao,
     private val fileManager: RecordingFileManager,
-    private val controller: RecordingController,
-    private val stateStore: RecordingStateStore
+    private val controller: RecorderController,
+    private val stateStore: RecordingStateStore,
+    @ApplicationContext private val context: Context,
 ) : RecordingRepository {
+
+    init {
+        controller.requestStateSync()
+    }
 
     override val sessionState: Flow<RecordingSessionState> = stateStore.state
 
@@ -32,32 +44,38 @@ class RecordingRepositoryImpl @Inject constructor(
         recordingDao.observeRecordings().map { list -> list.map { it.toDomain() } }
 
     override suspend fun startRecording(): RecordingSessionState = withContext(Dispatchers.IO) {
-        val file = fileManager.createFile()
-        controller.startRecording(file.absolutePath)
-        val startedState = RecordingSessionState.Active(
-            startTime = Instant.now(),
-            filePath = file.absolutePath,
-            isPaused = false,
-            amplitude = 0
-        )
-        stateStore.update(startedState)
-        startedState
+        if (!hasMicrophonePermission()) {
+            val error = RecordingSessionState.Error(
+                context.getString(R.string.error_microphone_permission)
+            )
+            stateStore.setError(error.message)
+            return@withContext error
+        }
+
+        val file = runCatching { fileManager.createFile() }
+            .getOrElse { throwable ->
+                val message = when (throwable) {
+                    is IOException -> context.getString(R.string.error_storage_unavailable)
+                    else -> throwable.message ?: context.getString(R.string.error_storage_unavailable)
+                }
+                stateStore.setError(message)
+                return@withContext RecordingSessionState.Error(message)
+            }
+
+        val startTime = Instant.now()
+        controller.startRecording(file.absolutePath, startTime.toEpochMilli())
+        stateStore.startSession(startTime, file.absolutePath)
+        stateStore.state.value
     }
 
     override suspend fun pauseRecording() {
         controller.pauseRecording()
-        val current = stateStore.state.value
-        if (current is RecordingSessionState.Active) {
-            stateStore.update(current.copy(isPaused = true))
-        }
+        stateStore.setPaused()
     }
 
     override suspend fun resumeRecording() {
         controller.resumeRecording()
-        val current = stateStore.state.value
-        if (current is RecordingSessionState.Active) {
-            stateStore.update(current.copy(isPaused = false))
-        }
+        stateStore.setResumed()
     }
 
     override suspend fun stopRecording(): Recording? = withContext(Dispatchers.IO) {
@@ -65,7 +83,7 @@ class RecordingRepositoryImpl @Inject constructor(
         controller.stopRecording()
         if (current is RecordingSessionState.Active) {
             val endTime = Instant.now()
-            val duration = endTime.toEpochMilli() - current.startTime.toEpochMilli()
+            val duration = current.elapsedMillis
             val recording = Recording(
                 title = endTime.toString(),
                 filePath = current.filePath,
@@ -76,11 +94,17 @@ class RecordingRepositoryImpl @Inject constructor(
             )
             val id = recordingDao.upsert(recording.toEntity())
             val stored = recording.copy(id = id)
-            stateStore.update(RecordingSessionState.Idle)
+            stateStore.stopSession()
             stored
         } else {
-            stateStore.update(RecordingSessionState.Idle)
+            stateStore.stopSession()
             null
         }
     }
+
+    private fun hasMicrophonePermission(): Boolean =
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
 }

@@ -20,7 +20,7 @@ This document outlines the proposed architecture, modules, and data flow for the
 1. **Start recording**
    - Triggered from UI, Quick Settings tile, notification action, or hardware shortcut handler.
    - ViewModel calls `StartRecordingUseCase` → `RecorderRepository.startRecording()`.
-   - Repository requests storage path from FileManager, starts `ForegroundRecorderService` via `RecordingController`, and emits active session state via Flow.
+   - Repository requests storage path from FileManager, starts `RecorderService` via `RecorderController`, and emits active session state via Flow.
    - Service acquires foreground notification, optionally partial wake lock, and streams audio to file.
 2. **Recording lifecycle**
    - Service writes PCM/encoded audio to file, exposes level updates through a shared Flow for UI waveform.

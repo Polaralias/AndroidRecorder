@@ -1,6 +1,14 @@
 <resources>
     <string name="app_name">Recorder</string>
     <string name="notification_recording_title">Recording in progress</string>
-    <string name="notification_recording_body">Tap to return to session</string>
+    <string name="notification_recording_body">Recording… %1$s</string>
+    <string name="notification_paused_body">Recording paused</string>
     <string name="notification_channel_recording">Recording</string>
+    <string name="notification_action_pause">Pause</string>
+    <string name="notification_action_resume">Resume</string>
+    <string name="notification_action_stop">Stop</string>
+    <string name="error_microphone_permission">Microphone permission is required to record.</string>
+    <string name="error_unable_to_start_recording">Unable to start the recorder.</string>
+    <string name="error_missing_output_path">Missing output file path.</string>
+    <string name="error_storage_unavailable">Storage unavailable for recording.</string>
 </resources>

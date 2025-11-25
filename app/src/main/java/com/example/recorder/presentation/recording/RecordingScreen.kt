@@ -70,6 +70,13 @@ fun RecordingScreen(
             style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(top = 16.dp)
         )
+        if (state.sessionState is RecordingSessionState.Error) {
+            Text(
+                text = (state.sessionState as RecordingSessionState.Error).message,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
         LevelIndicator(state)
         Row(
             modifier = Modifier
