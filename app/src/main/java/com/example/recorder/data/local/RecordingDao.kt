@@ -4,12 +4,16 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.example.recorder.domain.model.TranscriptionStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface RecordingDao {
     @Query("SELECT * FROM recordings ORDER BY created_at DESC")
     fun observeRecordings(): Flow<List<RecordingEntity>>
+
+    @Query("SELECT * FROM recordings WHERE id = :id")
+    fun observeRecording(id: Long): Flow<RecordingEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(recording: RecordingEntity): Long
@@ -32,4 +36,17 @@ interface RecordingDao {
         driveFileId: String?,
         lastBackupAttempt: Long?
     )
+
+    @Query(
+        "UPDATE recordings SET transcription_status = :status, transcription_text = :text, transcription_updated_at = :updatedAt WHERE id = :id"
+    )
+    suspend fun updateTranscription(
+        id: Long,
+        status: TranscriptionStatus,
+        text: String?,
+        updatedAt: Long?
+    )
+
+    @Query("SELECT * FROM recordings WHERE transcription_status IN ('NOT_STARTED', 'FAILED')")
+    suspend fun getPendingTranscriptions(): List<RecordingEntity>
 }
