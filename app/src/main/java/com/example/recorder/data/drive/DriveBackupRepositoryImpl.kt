@@ -3,33 +3,33 @@ package com.example.recorder.data.drive
 import com.example.recorder.data.local.RecordingDao
 import com.example.recorder.data.local.toDomain
 import com.example.recorder.data.local.toEntity
+import com.example.recorder.di.IoDispatcher
 import com.example.recorder.domain.model.BackupResult
 import com.example.recorder.domain.model.BackupSettings
 import com.example.recorder.domain.model.BackupStatus
 import com.example.recorder.domain.model.Recording
 import com.example.recorder.domain.repository.DriveBackupRepository
+import com.google.api.client.http.FileContent
+import com.google.api.services.drive.Drive
+import com.google.api.services.drive.model.File as DriveFile
 import java.io.File
 import java.io.IOException
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
-import com.google.api.client.http.FileContent
-import com.google.api.services.drive.Drive
-import com.google.api.services.drive.model.File as DriveFile
 
 @Singleton
 class DriveBackupRepositoryImpl @Inject constructor(
     private val authManager: DriveAuthManager,
     private val recordingDao: RecordingDao,
     private val preferences: BackupPreferencesDataSource,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
+    @IoDispatcher private val dispatcher: CoroutineDispatcher
 ) : DriveBackupRepository {
 
     private val _status = MutableStateFlow<BackupStatus>(BackupStatus.Idle)
