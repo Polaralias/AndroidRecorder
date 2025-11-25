@@ -24,7 +24,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Build debug APK
-        uses: gradle/gradle-build-action@v3
+        uses: gradle/gradle-build-action@v2
         with:
           arguments: assembleDebug
           gradle-version: 8.7
