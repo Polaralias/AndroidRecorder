@@ -34,7 +34,7 @@ class TranscriptionScheduler @Inject constructor(
         data?.let { requestBuilder.setInputData(it) }
 
         val request = requestBuilder.build()
-        workManager.enqueueUniqueWork(WORK_NAME, ExistingWorkPolicy.KEEP, request)
+        workManager.enqueueUniqueWork(WORK_NAME, ExistingWorkPolicy.APPEND_OR_REPLACE, request)
     }
 
     companion object {
