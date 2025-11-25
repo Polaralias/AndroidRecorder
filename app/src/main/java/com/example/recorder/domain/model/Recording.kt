@@ -16,7 +16,9 @@ data class Recording(
     val createdAt: Instant,
     val durationMillis: Long,
     val transcriptionStatus: TranscriptionStatus = TranscriptionStatus.NOT_STARTED,
-    val isBackedUp: Boolean = false
+    val isBackedUp: Boolean = false,
+    val driveFileId: String? = null,
+    val lastBackupAttempt: Instant? = null
 )
 
 sealed interface RecordingSessionState {

@@ -14,6 +14,7 @@ import com.example.recorder.data.recording.RecordingStateStore
 import com.example.recorder.domain.model.Recording
 import com.example.recorder.domain.model.RecordingSessionState
 import com.example.recorder.domain.model.TranscriptionStatus
+import com.example.recorder.domain.repository.DriveBackupRepository
 import com.example.recorder.domain.repository.RecordingRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.IOException
@@ -21,6 +22,7 @@ import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -31,6 +33,7 @@ class RecordingRepositoryImpl @Inject constructor(
     private val fileManager: RecordingFileManager,
     private val controller: RecorderController,
     private val stateStore: RecordingStateStore,
+    private val driveBackupRepository: DriveBackupRepository,
     @ApplicationContext private val context: Context,
 ) : RecordingRepository {
 
@@ -90,15 +93,25 @@ class RecordingRepositoryImpl @Inject constructor(
                 createdAt = current.startTime,
                 durationMillis = duration,
                 transcriptionStatus = TranscriptionStatus.NOT_STARTED,
-                isBackedUp = false
+                isBackedUp = false,
+                driveFileId = null,
+                lastBackupAttempt = null
             )
             val id = recordingDao.upsert(recording.toEntity())
             val stored = recording.copy(id = id)
             stateStore.stopSession()
+            triggerAutoBackupIfEnabled(stored)
             stored
         } else {
             stateStore.stopSession()
             null
+        }
+    }
+
+    private suspend fun triggerAutoBackupIfEnabled(recording: Recording) {
+        val autoBackupEnabled = driveBackupRepository.backupSettings.first().autoBackupEnabled
+        if (autoBackupEnabled) {
+            driveBackupRepository.backupRecording(recording)
         }
     }
 

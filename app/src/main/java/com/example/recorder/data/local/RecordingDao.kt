@@ -16,4 +16,20 @@ interface RecordingDao {
 
     @Query("SELECT * FROM recordings WHERE id = :id")
     suspend fun getRecording(id: Long): RecordingEntity?
+
+    @Query("SELECT is_backed_up FROM recordings WHERE id = :id")
+    suspend fun isBackedUp(id: Long): Boolean?
+
+    @Query("SELECT * FROM recordings WHERE is_backed_up = 0")
+    suspend fun getPendingBackups(): List<RecordingEntity>
+
+    @Query(
+        "UPDATE recordings SET is_backed_up = :isBackedUp, drive_file_id = :driveFileId, last_backup_attempt = :lastBackupAttempt WHERE id = :id"
+    )
+    suspend fun updateBackupState(
+        id: Long,
+        isBackedUp: Boolean,
+        driveFileId: String?,
+        lastBackupAttempt: Long?
+    )
 }
