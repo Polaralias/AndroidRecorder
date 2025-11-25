@@ -25,7 +25,7 @@
         </activity>
 
         <service
-            android:name=".recording.service.ForegroundRecorderService"
+            android:name=".recording.service.RecorderService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="microphone">
@@ -34,6 +34,7 @@
                 <action android:name="com.example.recorder.action.STOP_RECORDING" />
                 <action android:name="com.example.recorder.action.PAUSE_RECORDING" />
                 <action android:name="com.example.recorder.action.RESUME_RECORDING" />
+                <action android:name="com.example.recorder.action.SYNC_RECORDING" />
             </intent-filter>
         </service>
     </application>

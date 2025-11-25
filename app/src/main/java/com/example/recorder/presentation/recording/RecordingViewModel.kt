@@ -10,12 +10,10 @@ import com.example.recorder.domain.usecase.StartRecordingUseCase
 import com.example.recorder.domain.usecase.StopRecordingUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
 
 @HiltViewModel
 class RecordingViewModel @Inject constructor(
@@ -29,16 +27,11 @@ class RecordingViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(RecordingUiState())
     val uiState: StateFlow<RecordingUiState> = _uiState
 
-    private var timerJob: Job? = null
-
     init {
         viewModelScope.launch {
             repository.sessionState.collectLatest { state ->
-                _uiState.value = _uiState.value.copy(sessionState = state)
-                when (state) {
-                    is RecordingSessionState.Active -> startTimer(state.startTime.toEpochMilli())
-                    RecordingSessionState.Idle, is RecordingSessionState.Error -> stopTimer()
-                }
+                val elapsed = if (state is RecordingSessionState.Active) state.elapsedMillis else 0L
+                _uiState.value = _uiState.value.copy(sessionState = state, elapsedMillis = elapsed)
             }
         }
     }
@@ -57,21 +50,5 @@ class RecordingViewModel @Inject constructor(
 
     fun onStop() {
         viewModelScope.launch { stopRecording() }
-    }
-
-    private fun startTimer(startMillis: Long) {
-        timerJob?.cancel()
-        timerJob = viewModelScope.launch {
-            while (true) {
-                val now = System.currentTimeMillis()
-                _uiState.value = _uiState.value.copy(elapsedMillis = now - startMillis)
-                delay(200)
-            }
-        }
-    }
-
-    private fun stopTimer() {
-        timerJob?.cancel()
-        _uiState.value = _uiState.value.copy(elapsedMillis = 0L)
     }
 }
