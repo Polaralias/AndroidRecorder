@@ -37,5 +37,37 @@
                 <action android:name="com.example.recorder.action.SYNC_RECORDING" />
             </intent-filter>
         </service>
+
+        <service
+            android:name=".shortcut.RecordingToggleTileService"
+            android:exported="false"
+            android:icon="@drawable/ic_recorder"
+            android:label="@string/quick_tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE" />
+
+        <service
+            android:name=".shortcut.VolumeDownAccessibilityService"
+            android:exported="false"
+            android:label="@string/accessibility_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/volume_down_accessibility_service" />
+        </service>
+
+        <receiver
+            android:name=".shortcut.RecordingShortcutReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.example.recorder.action.TOGGLE_RECORDING" />
+                <action android:name="com.example.recorder.action.START_SHORTCUT_RECORDING" />
+                <action android:name="com.example.recorder.action.STOP_SHORTCUT_RECORDING" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

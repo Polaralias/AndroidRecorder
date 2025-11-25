@@ -7,8 +7,17 @@
     <string name="notification_action_pause">Pause</string>
     <string name="notification_action_resume">Resume</string>
     <string name="notification_action_stop">Stop</string>
+    <string name="notification_action_start">Start</string>
+    <string name="notification_quick_action_title">Quick record</string>
+    <string name="notification_quick_action_body">Tap to start or stop recording instantly.</string>
+    <string name="notification_channel_quick_actions">Recorder shortcuts</string>
     <string name="error_microphone_permission">Microphone permission is required to record.</string>
     <string name="error_unable_to_start_recording">Unable to start the recorder.</string>
     <string name="error_missing_output_path">Missing output file path.</string>
     <string name="error_storage_unavailable">Storage unavailable for recording.</string>
+    <string name="quick_tile_label">Quick record</string>
+    <string name="quick_tile_subtitle_active">Recording… tap to stop</string>
+    <string name="quick_tile_subtitle_idle">Ready. Tap to start</string>
+    <string name="accessibility_service_label">Recorder hardware shortcut</string>
+    <string name="accessibility_service_description">Capture triple volume-down presses to start or stop recording quickly.</string>
 </resources>
