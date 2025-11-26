@@ -27,7 +27,7 @@ jobs:
         uses: gradle/gradle-build-action@v3
         with:
           arguments: assembleDebug
-          gradle-version: 9.1
+          gradle-version: 9.2.1
 
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
