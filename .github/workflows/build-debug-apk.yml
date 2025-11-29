@@ -24,10 +24,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Build debug APK
-        uses: gradle/gradle-build-action@v3
-        with:
-          arguments: assembleDebug
-          gradle-version: 9.2.1
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
