@@ -1,3 +1,5 @@
+// Gradle 9.x Configuration
+// Using buildscript for Android plugins (better compatibility with Gradle 9.x)
 buildscript {
     repositories {
         google()
@@ -10,6 +12,7 @@ buildscript {
     }
 }
 
+// Using plugins DSL for Kotlin plugins (natively supported by Gradle Plugin Portal)
 plugins {
     id("org.jetbrains.kotlin.plugin.compose") version "2.0.21" apply false
     id("org.jetbrains.kotlin.kapt") version "2.0.21" apply false

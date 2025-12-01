@@ -95,9 +95,9 @@ This prevented local build validation but does not affect CI/CD, which has full 
 
 ### Technical Decisions
 
-1. **buildscript vs plugins DSL**: Chose buildscript approach for better plugin resolution compatibility with Gradle 9.x
+1. **buildscript vs plugins DSL**: Used buildscript for Android and Hilt plugins (better compatibility with Gradle 9.x plugin resolution), while keeping plugins DSL for Kotlin plugins that are natively supported by Gradle Plugin Portal
 
-2. **AGP 8.6.0**: Selected for stable Gradle 9.x support (AGP 8.7+ would also work but 8.6.0 is more widely tested)
+2. **AGP 8.6.0**: Selected for stable Gradle 9.x support. Note: AGP 8.7.x versions have limited availability - 8.7.0 and 8.7.1 exist but 8.7.2 and 8.7.3 were not found in repositories during investigation
 
 3. **Configuration Cache**: Disabled by default (`org.gradle.configuration-cache=false`) to ensure stability, can be enabled after validation
 
