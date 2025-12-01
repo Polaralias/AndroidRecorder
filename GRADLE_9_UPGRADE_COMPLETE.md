@@ -97,7 +97,7 @@ This prevented local build validation but does not affect CI/CD, which has full 
 
 1. **buildscript vs plugins DSL**: Used buildscript for Android and Hilt plugins (better compatibility with Gradle 9.x plugin resolution), while keeping plugins DSL for Kotlin plugins that are natively supported by Gradle Plugin Portal
 
-2. **AGP 8.6.0**: Selected for stable Gradle 9.x support. Note: AGP 8.7.x versions have limited availability - 8.7.0 and 8.7.1 exist but 8.7.2 and 8.7.3 were not found in repositories during investigation
+2. **AGP 8.6.0**: Selected for stable Gradle 9.x support. During investigation, AGP 8.7.2 was attempted (as specified in original build.gradle.kts) but was not available in accessible repositories. AGP 8.6.0 is a stable, well-tested version with official Gradle 9.x support.
 
 3. **Configuration Cache**: Disabled by default (`org.gradle.configuration-cache=false`) to ensure stability, can be enabled after validation
 
@@ -165,9 +165,9 @@ pluginManagement {
 
 ### AGP Compatibility Issues
 If AGP version issues occur:
-- AGP 8.6.0 officially supports Gradle 8.9 - 9.x
-- AGP 8.7+ has improved Gradle 9 support
-- Can upgrade to AGP 8.7.0+ if needed
+- AGP 8.6.0 officially supports Gradle 8.9 - 9.x (stable and recommended)
+- Newer AGP versions may be available depending on network access
+- Consult [Android Gradle Plugin Release Notes](https://developer.android.com/build/releases/gradle-plugin) for latest versions
 
 ## Documentation Files Created
 

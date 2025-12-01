@@ -52,9 +52,9 @@ Upgrade the project to use Gradle 9.2.1 for building with info debugging level.
    ```
 
 ### For Gradle 9.x Adoption (Future)
-1. Wait for Android Gradle Plugin 9.x which will have official Gradle 9 support
+1. Wait for more stable AGP versions with official Gradle 9 support
 2. Ensure network access to dl.google.com
-3. Use AGP 8.7+ which has experimental Gradle 9 support
+3. AGP 8.6.0+ has Gradle 9.x support (8.6.0 is recommended stable version)
 
 ### For CI/CD (GitHub Actions)
 1. GitHub Actions runners have full network access to google() repositories
