@@ -22,9 +22,32 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          api-level: 34
+          build-tools: 34.0.0
+
+      - name: Accept Android SDK licenses
+        run: |
+          ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$HOME/Android/Sdk}"
+          if [ -f "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
+            yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+          elif command -v sdkmanager &> /dev/null; then
+            yes | sdkmanager --licenses || true
+          else
+            echo "Warning: sdkmanager not found, skipping license acceptance"
+          fi
+
+      - name: CI diagnostics (Java / Gradle / compileSdk)
+        run: |
+          java -version
+          ./gradlew -v
+          echo "compileSdk entries from app:"
+          grep -n "compileSdk" app/build.gradle.kts || true
+          echo "Gradle wrapper distribution:"
+          grep distributionUrl gradle/wrapper/gradle-wrapper.properties || true
 
       - name: Build debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --stacktrace --info
 
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
