@@ -25,14 +25,18 @@ jobs:
         with:
           api-level: 34
           build-tools: 34.0.0
-          components: "cmdline-tools;latest;platform-tools;platforms;android-34;build-tools;34.0.0"
 
       - name: Accept Android SDK licenses
         run: |
-          export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$HOME/Android/Sdk}"
-          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
-          # ensure sdkmanager exists (cmdline-tools will install), then accept licenses
-          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+          set -e
+          ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$HOME/Android/Sdk}"
+          if [ -f "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
+            yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+          elif command -v sdkmanager &> /dev/null; then
+            yes | sdkmanager --licenses || true
+          else
+            echo "Warning: sdkmanager not found, skipping license acceptance"
+          fi
 
       - name: CI diagnostics (Java / Gradle / compileSdk)
         run: |
