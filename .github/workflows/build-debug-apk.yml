@@ -22,9 +22,31 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          api-level: 34
+          build-tools: 34.0.0
+          components: "platform-tools;platforms;android-34;build-tools;34.0.0;cmdline-tools;latest"
+
+      - name: Accept Android SDK licenses
+        run: |
+          export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$HOME/Android/Sdk}"
+          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
+          # sdkmanager will be available at cmdline-tools/latest/bin after setup-android installs cmdline-tools
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+          # create local.properties so Gradle in CI can find the SDK if project expects local.properties
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+
+      - name: CI diagnostics (Java / Gradle / compileSdk)
+        run: |
+          java -version
+          ./gradlew -v
+          echo "compileSdk entries from app (if any):"
+          grep -n "compileSdk" -R app || true
+          echo "Gradle wrapper distribution:"
+          grep distributionUrl gradle/wrapper/gradle-wrapper.properties || true
 
       - name: Build debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --stacktrace --info
 
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
