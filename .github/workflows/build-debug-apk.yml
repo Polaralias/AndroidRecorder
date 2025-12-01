@@ -1,5 +1,8 @@
 name: Build Debug APK
 
+# This workflow builds the Android app with Gradle 9.2.1
+# Gradle version is controlled by gradle/wrapper/gradle-wrapper.properties
+
 on:
   push:
     branches:
