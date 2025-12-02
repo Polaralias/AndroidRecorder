@@ -32,9 +32,10 @@ android {
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
         }
-        all {
-            buildConfigField("String", "SPEECH_PROXY_BASE_URL", "\"\"")
-        }
+    }
+
+    buildTypes.all {
+        buildConfigField("String", "SPEECH_PROXY_BASE_URL", "\"\"")
     }
 
     buildFeatures {
