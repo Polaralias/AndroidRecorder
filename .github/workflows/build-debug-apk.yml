@@ -50,7 +50,14 @@ jobs:
           grep distributionUrl gradle/wrapper/gradle-wrapper.properties || true
 
       - name: Build debug APK
-        run: ./gradlew assembleDebug --stacktrace --info
+        run: ./gradlew assembleDebug --stacktrace --info --warning-mode all
+
+      - name: Upload Gradle problems report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-problems-report
+          path: build/reports/problems/problems-report.html
+          if-no-files-found: warn
 
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
