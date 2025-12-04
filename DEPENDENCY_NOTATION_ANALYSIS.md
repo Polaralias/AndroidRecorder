@@ -24,10 +24,12 @@ implementation("androidx.room:room-runtime:2.8.4")
 
 No instances of deprecated map-style notation were found:
 ```kotlin
-// None of these patterns exist in the codebase:
+// None of these patterns exist in the codebase (examples of deprecated syntax):
 implementation(group = "androidx.core", name = "core-ktx", version = "1.17.0")
-implementation(group = "com.android.tools.build", name = "aapt2", version = "8.6.0-11315950", classifier = "linux")
+classpath(group = "com.android.tools.build", name = "gradle", version = "8.6.0")
 ```
+
+Note: The problem statement mentioned `aapt2` with classifier `linux`, but this is an internal dependency of the Android Gradle Plugin, not declared in project code.
 
 ### About the Reported Warnings
 
@@ -51,13 +53,13 @@ The project's Gradle configuration is already compliant with Gradle's recommende
 To verify no multi-string notation exists:
 ```bash
 # Search for Kotlin DSL named parameter syntax (map-style)
-grep -rn "group\s*=" --include="*.gradle*" .
+grep -E "group\s*=" --include="*.gradle*" -r .
 
 # Search for Groovy map-style with 'group:'
-grep -rn "group\s*:" --include="*.gradle*" .
+grep -E "group\s*:" --include="*.gradle*" -r .
 
 # Search for .add() methods that might use maps
-grep -rn "\.add(" --include="*.gradle*" .
+grep -E "\.add\(" --include="*.gradle*" -r .
 ```
 
 All commands return no results, confirming the project is clean.
