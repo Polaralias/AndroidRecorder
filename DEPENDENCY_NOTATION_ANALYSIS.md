@@ -17,15 +17,16 @@ Convert multi-string dependency notation to single-string notation in Gradle fil
 
 All dependencies in the repository already use the correct single-string notation format:
 ```kotlin
-implementation("group:artifact:version")
-classpath("group:artifact:version")
+implementation("androidx.core:core-ktx:1.17.0")
+classpath("com.android.tools.build:gradle:8.6.0")
+implementation("androidx.room:room-runtime:2.8.4")
 ```
 
 No instances of deprecated map-style notation were found:
 ```kotlin
 // None of these patterns exist in the codebase:
-implementation(group: "group", name: "artifact", version: "version")
-implementation([group: "group", name: "artifact", version: "version"])
+implementation(group = "androidx.core", name = "core-ktx", version = "1.17.0")
+implementation(group = "com.android.tools.build", name = "aapt2", version = "8.6.0-11315950", classifier = "linux")
 ```
 
 ### About the Reported Warnings
@@ -49,14 +50,17 @@ The project's Gradle configuration is already compliant with Gradle's recommende
 
 To verify no multi-string notation exists:
 ```bash
-# Search for 'group:' pattern
-grep -r "group:" --include="*.gradle*" .
+# Search for Kotlin DSL named parameter syntax (map-style)
+grep -rn "group\s*=" --include="*.gradle*" .
 
-# Search for map-style declarations
+# Search for Groovy map-style with 'group:'
 grep -rn "group\s*:" --include="*.gradle*" .
+
+# Search for .add() methods that might use maps
+grep -rn "\.add(" --include="*.gradle*" .
 ```
 
-Both commands return no results, confirming the project is clean.
+All commands return no results, confirming the project is clean.
 
 ## Conclusion
 
